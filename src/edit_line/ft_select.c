@@ -1,0 +1,76 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_select.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: acottier <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2017/04/04 11:09:31 by acottier          #+#    #+#             */
+/*   Updated: 2017/04/04 11:11:15 by acottier         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "edit_line.h"
+
+int						action_select(t_info *info, char buff[5])
+{
+	int					i;
+	const t_key_select	key[6] = {
+		{LEFT, &s_left}, {RIGHT, &s_right}, {SPACE, &space}, {TAB, &s_right}};
+
+	i = 0;
+	while (i < 6)
+	{
+		if (BUFF == key[i].key)
+		{
+			key[i].f(info);
+			return (0);
+		}
+		i++;
+	}
+	return (1);
+}
+
+static int				key(t_info *info)
+{
+	char				buff[5];
+
+	*(int *)buff = 0;
+	read(0, buff, 4);
+	if (action_select(info, buff) == 1)
+		return (1);
+	if (*(int *)buff == ENTER)
+	{
+		info->enter = 1;
+		return (1);
+	}
+	return (0);
+}
+
+void					ft_select(t_info *info, t_cursor *cur)
+{
+	int					line;
+	int					col;
+
+	col = cur->cur_col;
+	line = cur->cur_line;
+	if (lstlen(info->arg) > 0)
+	{
+		tputs(tgetstr("vi", 0), 1, my_putchar);
+		while (1)
+		{
+			go_pos(cur, line + 1, 0);
+			cur->cur_line += info->line;
+			print_lst(info);
+			if (key(info) == 1)
+				break ;
+		}
+		clear_line(cur, line + 1, info->line + line + 1, 0);
+		tputs(tgetstr("ve", 0), 1, my_putchar);
+		go_pos(cur, line, col);
+	}
+	else
+		info->arg->selected = 1;
+	put_in_str(cur, info);
+	free_arg_list(info->arg);
+}
